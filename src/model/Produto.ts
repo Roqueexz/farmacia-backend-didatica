@@ -220,4 +220,31 @@ export class Produto {
             return false;
         }
     }
-}
+
+    // DELETE: remove produto se não possuir vínculos com itens de pedido/venda
+    static async removerProduto(idProduto: number): Promise<{ sucesso: boolean; mensagem: string }> {
+        try {
+            const checkQuery = `SELECT COUNT(*) AS total FROM item_venda WHERE id_produto = $1;`;
+            const checkRes = await database.query(checkQuery, [idProduto]);
+            const total = Number(checkRes.rows[0]?.total || 0);
+
+            if (total > 0) {
+                return {
+                    sucesso: false,
+                    mensagem: `Não é possível excluir: o produto possui ${total} venda(s) associada(s).`
+                };
+            }
+
+            const queryDelete = `DELETE FROM produto WHERE id_produto = $1 RETURNING id_produto;`;
+            const result = await database.query(queryDelete, [idProduto]);
+
+            if (result.rows.length > 0) {
+                return { sucesso: true, mensagem: "Produto excluído com sucesso." };
+            }
+            return { sucesso: false, mensagem: "Produto não encontrado." };
+        } catch (error) {
+            console.error(`Erro ao remover produto: ${error}`);
+            return { sucesso: false, mensagem: "Erro interno ao remover produto." };
+        }
+    }
+}

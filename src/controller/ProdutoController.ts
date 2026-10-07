@@ -68,6 +68,29 @@ class ProdutoController extends Produto {
             return res.status(500).json({ mensagem: "Erro ao atualizar produto." });
         }
     }
+
+    static async remover(req: Request, res: Response): Promise<Response> {
+        try {
+            const idProdutoParam = req.params.idProduto;
+            const idProduto = Number(idProdutoParam);
+
+            if (isNaN(idProduto)) {
+                return res.status(400).json({ mensagem: "ID do produto inválido." });
+            }
+
+            const resultado = await Produto.removerProduto(idProduto);
+
+            if (resultado.sucesso) {
+                return res.status(200).json({ mensagem: resultado.mensagem });
+            } else {
+                return res.status(400).json({ mensagem: resultado.mensagem });
+            }
+        } catch (error) {
+            console.error(`Erro ao remover produto: ${error}`);
+            return res.status(500).json({ mensagem: "Erro ao remover produto." });
+        }
+    }
 }
 
 export default ProdutoController;
+
